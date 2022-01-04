@@ -1,0 +1,36 @@
+version: '3.9'
+services:
+  db:
+    platform: linux/x86_64
+    image: mysql:8.0.21
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: resmiru_api
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      MYSQL_DATABASE: resmiru_api_development
+      MYSQL_USER: resmiru_api
+      MYSQL_PASSWORD: resmiru_api
+      TZ: 'Asia/Tokyo'
+    volumes:
+      - mysql_vol:/var/lib/mysql
+  app:
+    platform: linux/x86_64
+    build: .
+    command: /bin/sh -c "rm -f /app/tmp/pids/server.pid && bundle install && yarn install --check-files && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    volumes:
+      - bundle_install:/bundle
+      - .:/app
+      - gem_vol:/usr/local/bundle
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_PASSWORD=resmiru_api
+volumes:
+  mysql_vol:
+  gem_vol:
+  bundle_install:
